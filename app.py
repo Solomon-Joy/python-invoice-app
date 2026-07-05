@@ -46,7 +46,10 @@ class InvoiceWriter(QMainWindow):
 
     def __init__(self):
         super().__init__()
-        self.baseDir = Path(__file__).resolve().parent
+        if getattr(sys, 'frozen', False):
+            self.baseDir = Path(sys.executable).parent
+        else:
+            self.baseDir = Path(__file__).resolve().parent
         self.dataDir = self.baseDir / "data"
         self.invoicesDir = self.dataDir / "invoices"
         self.dataDir.mkdir(parents=True, exist_ok=True)

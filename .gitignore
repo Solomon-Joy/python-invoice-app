@@ -1,0 +1,24 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+
+# PyInstaller
+build/
+dist/
+*.spec
+
+# Database and Data (Optional, but usually you don't commit live databases)
+data/invoice_app.db
+data/.migrated
+data/invoices/
+crash.log
+
+# VS Code
+.vscode/
+
+# Virtual Environments
+venv/
+env/
+ENV/
