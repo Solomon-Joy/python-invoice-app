@@ -1,0 +1,42 @@
+[
+  {
+    "invoiceNumber": "25-26/INV/0006",
+    "date": "15-03-2026",
+    "vendorName": "sm traders",
+    "vendorGST": "1234567",
+    "netPayable": 1942.5,
+    "pdfPath": "C:/Users/LENOVO/Desktop/invoice/python-invoice-app/0006.pdf",
+    "jsonPath": "C:\\Users\\LENOVO\\Desktop\\invoice\\python-invoice-app\\data\\invoices\\25-26_INV_0006_20260315_194315.json",
+    "savedAt": "2026-03-15 19:43:15"
+  },
+  {
+    "invoiceNumber": "25-26/INV/0007",
+    "date": "15-03-2026",
+    "vendorName": "sm traders",
+    "vendorGST": "1234567",
+    "netPayable": 1522.5,
+    "pdfPath": "C:/Users/LENOVO/Desktop/invoice/python-invoice-app/0007.pdf",
+    "jsonPath": "C:\\Users\\LENOVO\\Desktop\\invoice\\python-invoice-app\\data\\invoices\\25-26_INV_0007_20260315_202503.json",
+    "savedAt": "2026-03-15 20:25:03"
+  },
+  {
+    "invoiceNumber": "25-26/INV/0009",
+    "date": "21-03-2026",
+    "vendorName": "sm traders",
+    "vendorGST": "1234567",
+    "netPayable": 1102.5,
+    "pdfPath": "C:/Users/LENOVO/Desktop/invoice/python-invoice-app/0009.pdf",
+    "jsonPath": "C:\\Users\\LENOVO\\Desktop\\invoice\\python-invoice-app\\data\\invoices\\25-26_INV_0009_20260321_130415.json",
+    "savedAt": "2026-03-21 13:04:15"
+  },
+  {
+    "invoiceNumber": "26-27/INV/0004",
+    "date": "05-07-2026",
+    "vendorName": "sm traders",
+    "vendorGST": "1234567",
+    "netPayable": 1018.5,
+    "pdfPath": "C:/Users/LENOVO/Desktop/invoice/python-invoice-app/0004.pdf",
+    "jsonPath": "C:\\Users\\LENOVO\\Desktop\\invoice\\python-invoice-app\\data\\invoices\\26-27_INV_0004_20260705_215517.json",
+    "savedAt": "2026-07-05 21:55:17"
+  }
+]

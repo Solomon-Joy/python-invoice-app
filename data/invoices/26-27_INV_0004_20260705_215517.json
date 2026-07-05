@@ -1,0 +1,62 @@
+{
+  "invoiceNumber": "26-27/INV/0004",
+  "date": "05-07-2026",
+  "vendorName": "sm traders",
+  "vendorAddress": "sm traders,thrissur",
+  "vendorGST": "1234567",
+  "vendorContact": "8574979054",
+  "vendorState": "kerala",
+  "vendorPin": "680618",
+  "placeOfSupply": "THRISSUR",
+  "vehicleNumber": "6578",
+  "hsnSac": "19059010",
+  "unitName": "Nos",
+  "previousBalance": 0.0,
+  "advanceReceived": 0.0,
+  "roundOff": 0.0,
+  "subtotal": 970.0,
+  "cgstAmount": 24.25,
+  "sgstAmount": 24.25,
+  "totalTax": 48.5,
+  "grossTotal": 1018.5,
+  "netPayable": 1018.5,
+  "items": [
+    {
+      "description": "thakkali murukk",
+      "hsn": "19059010",
+      "quantity": 10,
+      "mrp": 35.0,
+      "price": 27.0,
+      "total": 270.0,
+      "disc": "",
+      "taxable": "",
+      "cgst_pct": 2.5,
+      "cgst": 6.75,
+      "sgst_pct": 2.5,
+      "sgst": 6.75
+    },
+    {
+      "description": "ghee rusk",
+      "hsn": "19059010",
+      "quantity": 10,
+      "mrp": 90.0,
+      "price": 70.0,
+      "total": 700.0,
+      "disc": "",
+      "taxable": "",
+      "cgst_pct": 2.5,
+      "cgst": 17.5,
+      "sgst_pct": 2.5,
+      "sgst": 17.5
+    }
+  ],
+  "copies": 3,
+  "copyLabels": [
+    "ORIGINAL FOR VENDOR",
+    "COPY FOR DISTRIBUTOR",
+    "OFFICIAL PURPOSE COPY"
+  ],
+  "createdAt": "2026-07-05 21:55:13",
+  "pdfPath": "C:/Users/LENOVO/Desktop/invoice/python-invoice-app/0004.pdf",
+  "savedAt": "2026-07-05 21:55:17"
+}

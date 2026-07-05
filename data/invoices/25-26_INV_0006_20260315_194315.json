@@ -1,0 +1,44 @@
+{
+  "invoiceNumber": "25-26/INV/0006",
+  "date": "15-03-2026",
+  "vendorName": "sm traders",
+  "vendorAddress": "sm traders,thrissur",
+  "vendorGST": "1234567",
+  "vendorContact": "8574979054",
+  "vendorState": "kerala",
+  "vendorPin": "680618",
+  "placeOfSupply": "market,thriussur",
+  "vehicleNumber": "7647",
+  "hsnSac": "19059010",
+  "unitName": "Nos",
+  "previousBalance": 0.0,
+  "advanceReceived": 0.0,
+  "roundOff": 0.0,
+  "subtotal": 1850.0,
+  "cgstAmount": 46.25,
+  "sgstAmount": 46.25,
+  "totalTax": 92.5,
+  "grossTotal": 1942.5,
+  "netPayable": 1942.5,
+  "items": [
+    {
+      "description": "thakkali murukk",
+      "quantity": 10,
+      "price": 35.0
+    },
+    {
+      "description": "ghee rusk",
+      "quantity": 20,
+      "price": 75.0
+    }
+  ],
+  "copies": 3,
+  "copyLabels": [
+    "ORIGINAL FOR VENDOR",
+    "COPY FOR DISTRIBUTOR",
+    "OFFICIAL PURPOSE COPY"
+  ],
+  "createdAt": "2026-03-15 19:43:12",
+  "pdfPath": "C:/Users/LENOVO/Desktop/invoice/python-invoice-app/0006.pdf",
+  "savedAt": "2026-03-15 19:43:15"
+}

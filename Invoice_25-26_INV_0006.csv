@@ -1,0 +1,14 @@
+Invoice Number,25-26/INV/0006
+Date,15-03-2026
+Customer,sm traders
+Customer GSTIN,1234567
+
+Description,Qty,Unit Price,Amount
+thakkali murukk,10,35.00,350.00
+ghee rusk,20,75.00,1500.00
+
+Subtotal,1850.00
+CGST,46.25
+SGST,46.25
+Gross Total,1942.50
+Net Payable,1942.50

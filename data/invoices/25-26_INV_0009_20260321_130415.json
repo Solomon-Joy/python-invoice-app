@@ -1,0 +1,39 @@
+{
+  "invoiceNumber": "25-26/INV/0009",
+  "date": "21-03-2026",
+  "vendorName": "sm traders",
+  "vendorAddress": "sm traders,thrissur",
+  "vendorGST": "1234567",
+  "vendorContact": "8574979054",
+  "vendorState": "kerala",
+  "vendorPin": "680618",
+  "placeOfSupply": "thrissur",
+  "vehicleNumber": "2738",
+  "hsnSac": "19059010",
+  "unitName": "Nos",
+  "previousBalance": 0.0,
+  "advanceReceived": 0.0,
+  "roundOff": 0.0,
+  "subtotal": 1050.0,
+  "cgstAmount": 26.25,
+  "sgstAmount": 26.25,
+  "totalTax": 52.5,
+  "grossTotal": 1102.5,
+  "netPayable": 1102.5,
+  "items": [
+    {
+      "description": "thakkali murukk",
+      "quantity": 30,
+      "price": 35.0
+    }
+  ],
+  "copies": 3,
+  "copyLabels": [
+    "ORIGINAL FOR VENDOR",
+    "COPY FOR DISTRIBUTOR",
+    "OFFICIAL PURPOSE COPY"
+  ],
+  "createdAt": "2026-03-21 13:04:12",
+  "pdfPath": "C:/Users/LENOVO/Desktop/invoice/python-invoice-app/0009.pdf",
+  "savedAt": "2026-03-21 13:04:15"
+}
