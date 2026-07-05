@@ -8,6 +8,7 @@ import csv
 import json
 import os
 import urllib.parse
+from database import DatabaseManager, migrate_from_json
 import webbrowser
 from datetime import datetime
 from pathlib import Path
@@ -50,15 +51,20 @@ class InvoiceWriter(QMainWindow):
         self.invoicesDir = self.dataDir / "invoices"
         self.dataDir.mkdir(parents=True, exist_ok=True)
         self.invoicesDir.mkdir(parents=True, exist_ok=True)
-        self.customersFile = self.dataDir / "customers.json"
-        self.productsFile = self.dataDir / "products.json"
-        self.countersFile = self.dataDir / "counters.json"
-        self.indexFile = self.dataDir / "invoice_index.json"
-        self.customers = self.loadJson(self.customersFile, [])
-        self.products = self.loadJson(self.productsFile, [])
-        self.counters = self.loadJson(self.countersFile, {})
-        self.invoiceIndex = self.loadJson(self.indexFile, [])
+        db_path = self.dataDir / "invoice_app.db"
+        self.db = DatabaseManager(db_path)
+        
+        migration_flag = self.dataDir / ".migrated"
+        if not migration_flag.exists():
+            migrate_from_json(self.dataDir, self.db)
+            migration_flag.touch()
+
+        self.customers = self.db.get_all_customers()
+        self.products = self.db.get_all_products()
+        self.counters = self.db.get_setting('counters', {})
+        self.invoiceIndex = self.db.get_all_invoices()
         self.initUI()
+        self.updateDashboard()
         self.invoiceData = {}
 
     def initUI(self):
@@ -82,9 +88,13 @@ class InvoiceWriter(QMainWindow):
 
         # Tabs
         self.tabs = QTabWidget()
+        self.dashboardTab = self.createDashboardTab()
+        self.settingsTab = self.createSettingsTab()
+        self.tabs.addTab(self.dashboardTab, "Dashboard")
         self.tabs.addTab(self.createNormalInvoiceTab(), "Normal Invoice")
         self.tabs.addTab(self.createGSTInvoiceTab(), "GST Invoice")
         self.tabs.addTab(self.createHistoryTab(), "Invoice History")
+        self.tabs.addTab(self.settingsTab, "Settings")
         layout.addWidget(self.tabs)
 
     def loadJson(self, path, default):
@@ -947,11 +957,23 @@ class InvoiceWriter(QMainWindow):
         styles = getSampleStyleSheet()
         
         # Company Header - Centered
-        company_header = [
-            ['RINA RICH FOOD & AGENCIES'],
-            ['Aranauttukara, Thrissur, Kerala - 680301'],
-            ['Phone: +91-9895314201']
-        ]
+        company_name = self.db.get_setting('COMPANY_NAME', self.COMPANY_NAME)
+        company_address = self.db.get_setting('COMPANY_ADDRESS', self.COMPANY_ADDRESS)
+        company_phone = self.db.get_setting('COMPANY_PHONE', self.COMPANY_PHONE)
+        company_logo = self.db.get_setting('COMPANY_LOGO', '')
+        
+        company_header = []
+        if company_logo:
+            try:
+                from reportlab.platypus import Image
+                company_header.append([Image(company_logo, width=1.5*inch, height=0.75*inch)])
+            except Exception:
+                pass
+        company_header.extend([
+            [company_name],
+            [company_address],
+            [f"Phone: {company_phone}"]
+        ])
         
         header_table = Table(company_header, colWidths=[6*inch])
         header_table.setStyle(TableStyle([
@@ -1063,11 +1085,14 @@ class InvoiceWriter(QMainWindow):
         doc = SimpleDocTemplate(fileName, pagesize=A4, topMargin=0.5*inch, bottomMargin=0.5*inch)
         story = []
         styles = getSampleStyleSheet()
-        company_name = self.COMPANY_NAME
-        company_address = self.COMPANY_ADDRESS
-        company_phone = self.COMPANY_PHONE
-        company_gstin = self.COMPANY_GSTIN
-        company_state = self.COMPANY_STATE
+        company_name = self.db.get_setting('COMPANY_NAME', self.COMPANY_NAME)
+        company_address = self.db.get_setting('COMPANY_ADDRESS', self.COMPANY_ADDRESS)
+        company_phone = self.db.get_setting('COMPANY_PHONE', self.COMPANY_PHONE)
+        company_gstin = self.db.get_setting('COMPANY_GSTIN', self.COMPANY_GSTIN)
+        company_state = self.db.get_setting('COMPANY_STATE', self.COMPANY_STATE)
+        company_pan = self.db.get_setting('COMPANY_PAN', '')
+        company_fssai = self.db.get_setting('COMPANY_FSSAI', '')
+        company_logo = self.db.get_setting('COMPANY_LOGO', '')
         copy_labels = data.get('copyLabels') or self.GST_COPY_LABELS
 
         hsn = data.get('hsnSac', '').strip() or "19059010"
@@ -1148,13 +1173,24 @@ class InvoiceWriter(QMainWindow):
             ]))
             story.append(invoice_title)
 
-            company_block = Table([[
-                Paragraph(
-                    f"<b>{company_name}</b><br/>{company_address}<br/>Phone: {company_phone}<br/>"
-                    f"State: {company_state} &nbsp;&nbsp;&nbsp;&nbsp; GSTIN: {company_gstin}",
-                    styles['Normal']
-                )
-            ]], colWidths=[6.6 * inch])
+            header_content = []
+            if company_logo:
+                try:
+                    from reportlab.platypus import Image
+                    header_content.append(Image(company_logo, width=1.5*inch, height=0.75*inch))
+                except Exception:
+                    pass
+                    
+            header_text = f"<b><font size=12>{company_name}</font></b><br/>{company_address}<br/>Phone: {company_phone}<br/>"
+            header_text += f"State: {company_state} &nbsp;&nbsp;&nbsp;&nbsp; GSTIN: {company_gstin}"
+            if company_pan:
+                header_text += f" &nbsp;&nbsp;&nbsp;&nbsp; PAN: {company_pan}"
+            if company_fssai:
+                header_text += f"<br/><i>fssai</i>: {company_fssai}"
+                
+            header_content.append(Paragraph(header_text, styles['Normal']))
+            
+            company_block = Table([header_content], colWidths=None)
             company_block.setStyle(TableStyle([
                 ('BOX', (0, 0), (-1, -1), 1, colors.black),
                 ('VALIGN', (0, 0), (-1, -1), 'TOP'),
@@ -1312,6 +1348,135 @@ class InvoiceWriter(QMainWindow):
         prefix = f"{self.PDF_CURRENCY} " if space else self.PDF_CURRENCY
         return f"{prefix}{amount:.2f}"
 
+    def createSettingsTab(self):
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+
+        group = self.createSection("Company Details")
+        form = QFormLayout()
+
+        self.settingCompanyName = QLineEdit(self.db.get_setting('COMPANY_NAME', self.COMPANY_NAME))
+        self.settingCompanyAddress = QLineEdit(self.db.get_setting('COMPANY_ADDRESS', self.COMPANY_ADDRESS))
+        self.settingCompanyPhone = QLineEdit(self.db.get_setting('COMPANY_PHONE', self.COMPANY_PHONE))
+        self.settingCompanyGSTIN = QLineEdit(self.db.get_setting('COMPANY_GSTIN', self.COMPANY_GSTIN))
+        self.settingCompanyPAN = QLineEdit(self.db.get_setting('COMPANY_PAN', ''))
+        self.settingCompanyFSSAI = QLineEdit(self.db.get_setting('COMPANY_FSSAI', ''))
+        
+        logo_layout = QHBoxLayout()
+        self.settingCompanyLogo = QLineEdit(self.db.get_setting('COMPANY_LOGO', ''))
+        self.settingCompanyLogo.setReadOnly(True)
+        btn_logo = QPushButton("Browse")
+        btn_logo.clicked.connect(self.browseLogo)
+        logo_layout.addWidget(self.settingCompanyLogo)
+        logo_layout.addWidget(btn_logo)
+
+        form.addRow("Company Name", self.settingCompanyName)
+        form.addRow("Address", self.settingCompanyAddress)
+        form.addRow("Phone", self.settingCompanyPhone)
+        form.addRow("GSTIN", self.settingCompanyGSTIN)
+        form.addRow("PAN", self.settingCompanyPAN)
+        form.addRow("FSSAI", self.settingCompanyFSSAI)
+        form.addRow("Logo Path", logo_layout)
+
+        group['layout'].addLayout(form)
+        layout.addWidget(group['widget'])
+
+        saveBtn = QPushButton("Save Settings")
+        saveBtn.setObjectName("primary")
+        saveBtn.clicked.connect(self.saveSettings)
+        layout.addWidget(saveBtn)
+        layout.addStretch()
+
+        return widget
+
+    def browseLogo(self):
+        options = QFileDialog.Options()
+        fileName, _ = QFileDialog.getOpenFileName(self, "Select Logo", "", "Images (*.png *.xpm *.jpg *.jpeg *.bmp)", options=options)
+        if fileName:
+            self.settingCompanyLogo.setText(fileName)
+
+    def saveSettings(self):
+        self.db.set_setting('COMPANY_NAME', self.settingCompanyName.text().strip())
+        self.db.set_setting('COMPANY_ADDRESS', self.settingCompanyAddress.text().strip())
+        self.db.set_setting('COMPANY_PHONE', self.settingCompanyPhone.text().strip())
+        self.db.set_setting('COMPANY_GSTIN', self.settingCompanyGSTIN.text().strip())
+        self.db.set_setting('COMPANY_PAN', self.settingCompanyPAN.text().strip())
+        self.db.set_setting('COMPANY_FSSAI', self.settingCompanyFSSAI.text().strip())
+        self.db.set_setting('COMPANY_LOGO', self.settingCompanyLogo.text().strip())
+        QMessageBox.information(self, "Success", "Settings saved successfully!")
+
+    def createDashboardTab(self):
+        widget = QWidget()
+        layout = QVBoxLayout(widget)
+        layout.setContentsMargins(12, 12, 12, 12)
+        layout.setSpacing(10)
+
+        # Top Stats
+        statsLayout = QHBoxLayout()
+        self.lblTotalRevenue = QLabel("Total Revenue: Rs. 0.00")
+        self.lblTotalInvoices = QLabel("Total Invoices: 0")
+        self.lblTotalRevenue.setStyleSheet("font-size: 16px; font-weight: bold;")
+        self.lblTotalInvoices.setStyleSheet("font-size: 16px; font-weight: bold;")
+        statsLayout.addWidget(self.lblTotalRevenue)
+        statsLayout.addWidget(self.lblTotalInvoices)
+        layout.addLayout(statsLayout)
+
+        # Chart
+        self.chartLabel = QLabel()
+        from PyQt5.QtCore import Qt
+        self.chartLabel.setAlignment(Qt.AlignCenter)
+        layout.addWidget(self.chartLabel)
+
+        btnRefresh = QPushButton("Refresh Dashboard")
+        btnRefresh.clicked.connect(self.updateDashboard)
+        layout.addWidget(btnRefresh)
+
+        return widget
+
+    def updateDashboard(self):
+        from collections import defaultdict
+        import matplotlib
+        matplotlib.use('Agg')
+        import matplotlib.pyplot as plt
+        from PyQt5.QtGui import QPixmap
+        
+        if not hasattr(self, 'dashboardTab'):
+            return
+            
+        invoices = self.db.get_all_invoices()
+        total_rev = sum(inv.get('netPayable', 0.0) for inv in invoices)
+        self.lblTotalRevenue.setText(f"Total Revenue: Rs. {total_rev:,.2f}")
+        self.lblTotalInvoices.setText(f"Total Invoices: {len(invoices)}")
+        
+        # Group by date for chart
+        revenue_by_date = defaultdict(float)
+        for inv in invoices:
+            date_str = inv.get('date', '')
+            if date_str:
+                revenue_by_date[date_str] += inv.get('netPayable', 0.0)
+                
+        sorted_dates = sorted(revenue_by_date.keys())
+        revenues = [revenue_by_date[d] for d in sorted_dates]
+        
+        fig, ax = plt.subplots(figsize=(5, 4), dpi=100)
+        if sorted_dates:
+            ax.bar(sorted_dates, revenues, color='#3498db')
+            ax.set_title("Revenue Over Time")
+            ax.set_ylabel("Revenue (Rs.)")
+            ax.tick_params(axis='x', rotation=45)
+            fig.tight_layout()
+        else:
+            ax.text(0.5, 0.5, "No Data Available", ha='center', va='center')
+            
+        chart_path = str(self.dataDir / "chart.png")
+        fig.savefig(chart_path)
+        plt.close(fig)
+        
+        pixmap = QPixmap(chart_path)
+        self.chartLabel.setPixmap(pixmap)
+
     def createHistoryTab(self):
         widget = QWidget()
         layout = QVBoxLayout(widget)
@@ -1411,7 +1576,8 @@ class InvoiceWriter(QMainWindow):
         self.customers = [c for c in self.customers if c.get("vendorName", "").lower() != customer["vendorName"].lower()]
         self.customers.append(customer)
         self.customers.sort(key=lambda c: c.get("vendorName", "").lower())
-        self.saveJson(self.customersFile, self.customers)
+        self.db.add_or_update_customer(customer)
+        self.customers = self.db.get_all_customers()
         self.loadCustomerProfiles()
         QMessageBox.information(self, "Saved", "Customer profile saved.")
 
@@ -1451,7 +1617,8 @@ class InvoiceWriter(QMainWindow):
         self.products = [p for p in self.products if p.get("name", "").lower() != name.lower()]
         self.products.append(product)
         self.products.sort(key=lambda p: p.get("name", "").lower())
-        self.saveJson(self.productsFile, self.products)
+        self.db.add_or_update_product(product)
+        self.products = self.db.get_all_products()
         self.loadProductProfiles()
         QMessageBox.information(self, "Saved", "Product profile saved.")
 
@@ -1485,7 +1652,7 @@ class InvoiceWriter(QMainWindow):
         fy_key = f"{fy_start}-{fy_end_short}"
         next_num = int(self.counters.get(fy_key, 0)) + 1
         self.counters[fy_key] = next_num
-        self.saveJson(self.countersFile, self.counters)
+        self.db.set_setting('counters', self.counters)
         self.gstFields['invoiceNumber'].setText(f"{str(fy_start)[-2:]}-{fy_end_short}/INV/{next_num:04d}")
 
     def refreshLivePreview(self):
@@ -1594,7 +1761,9 @@ class InvoiceWriter(QMainWindow):
             "jsonPath": str(json_path),
             "savedAt": payload["savedAt"],
         })
-        self.saveJson(self.indexFile, self.invoiceIndex)
+        self.db.add_invoice_index(payload)
+        self.invoiceIndex = self.db.get_all_invoices()
+        self.updateDashboard()
 
     def loadInvoiceHistory(self):
         if not hasattr(self, "historyTable"):
@@ -1707,7 +1876,12 @@ class InvoiceWriter(QMainWindow):
 
 
 if __name__ == '__main__':
-    app = QApplication(sys.argv)
-    window = InvoiceWriter()
-    window.show()
-    sys.exit(app.exec_())
+    try:
+        app = QApplication(sys.argv)
+        window = InvoiceWriter()
+        window.show()
+        sys.exit(app.exec_())
+    except Exception as e:
+        print(f"Caught exception: {e}")
+        import traceback
+        traceback.print_exc()

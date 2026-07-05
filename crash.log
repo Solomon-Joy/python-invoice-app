@@ -1,0 +1,13 @@
+Traceback (most recent call last):
+  File "C:\Users\LENOVO\Desktop\invoice\python-invoice-app\app.py", line 1878, in <module>
+    window = InvoiceWriter()
+             ^^^^^^^^^^^^^^^
+  File "C:\Users\LENOVO\Desktop\invoice\python-invoice-app\app.py", line 72, in __init__
+    self.initUI()
+  File "C:\Users\LENOVO\Desktop\invoice\python-invoice-app\app.py", line 97, in initUI
+    self.dashboardTab = self.createDashboardTab()
+                        ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\LENOVO\Desktop\invoice\python-invoice-app\app.py", line 1433, in createDashboardTab
+    self.figure = Figure(figsize=(5, 4), dpi=100)
+                  ^^^^^^
+NameError: name 'Figure' is not defined
